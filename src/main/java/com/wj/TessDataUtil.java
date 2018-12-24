@@ -33,7 +33,13 @@ public class TessDataUtil {
             URL url = new URL(imageUrl);
             in = url.openStream();
             Tesseract tesseract = new Tesseract();
+            if (language == null || language.length() == 0) {
+                language = MIX;
+            }
             tesseract.setLanguage(language);
+            if (tessDataPath == null || tessDataPath.length() == 0) {
+                throw new NullPointerException("tessDataPath can not be empty");
+            }
             tesseract.setDatapath(tessDataPath);
             BufferedImage image = ImageIO.read(in);
             String result = tesseract.doOCR(image);
@@ -67,7 +73,13 @@ public class TessDataUtil {
             File file = new File(imagePath);
             in = new  FileInputStream(file);
             Tesseract tesseract = new Tesseract();
+            if (language == null || language.length() == 0) {
+                language = MIX;
+            }
             tesseract.setLanguage(language);
+            if (tessDataPath == null || tessDataPath.length() == 0) {
+                throw new NullPointerException("tessDataPath can not be empty");
+            }
             tesseract.setDatapath(tessDataPath);
             BufferedImage image = ImageIO.read(in);
             String result = tesseract.doOCR(image);
