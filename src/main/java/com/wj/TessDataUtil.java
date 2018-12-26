@@ -20,6 +20,9 @@ public class TessDataUtil {
     public final static String CH = "chi_sim";
     public final static  String MIX = "eng+chi_sim";
 
+    private final static String HTTP_PREFIX = "http";
+    private final static String HTTPS_PREFIX = "https";
+
     /**
      * 从网络获取图片解析为字符串
      * @param imageUrl
@@ -28,6 +31,15 @@ public class TessDataUtil {
      * @return
      */
     public static String parseNetImageToString(String imageUrl, String language, String tessDataPath) throws ParseImageException {
+        if (imageUrl == null || imageUrl.length() == 0) {
+            throw new NullPointerException("imageUrl can not be empty");
+        }
+        if (tessDataPath == null || tessDataPath.length() == 0) {
+            throw new NullPointerException("tessDataPath can not be empty");
+        }
+        if (!imageUrl.startsWith(HTTP_PREFIX) && imageUrl.startsWith(HTTPS_PREFIX)) {
+            throw  new ParseImageException("imageUrl must be start with" + HTTP_PREFIX + " or" + HTTPS_PREFIX);
+        }
         InputStream in = null;
         try {
             URL url = new URL(imageUrl);
@@ -37,9 +49,6 @@ public class TessDataUtil {
                 language = MIX;
             }
             tesseract.setLanguage(language);
-            if (tessDataPath == null || tessDataPath.length() == 0) {
-                throw new NullPointerException("tessDataPath can not be empty");
-            }
             tesseract.setDatapath(tessDataPath);
             BufferedImage image = ImageIO.read(in);
             String result = tesseract.doOCR(image);
