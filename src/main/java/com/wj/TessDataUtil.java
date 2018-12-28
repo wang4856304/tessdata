@@ -3,11 +3,18 @@ package com.wj;
 import net.sourceforge.tess4j.Tesseract;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 /**
  * @Author wangJun
@@ -113,7 +120,65 @@ public class TessDataUtil {
         String imageUrl = "http://es.bnuz.edu.cn/checkcode.aspx?0.33556625493951997/";
         String imagePath = "F:\\checkcode.gif";
         String tessDataPath = "F:\\tessdata";
-        String result = parseNetImageToString(imageUrl, ENG, tessDataPath);
-        System.out.println(result);
+
+        java.util.List<String> imagePathList = Arrays.asList(
+                "F:\\checkcode.gif",
+                "F:\\checkcode.gif",
+                "F:\\checkcode.gif",
+                "F:\\checkcode.gif",
+                "F:\\checkcode.gif",
+                "F:\\checkcode.gif",
+                "F:\\checkcode.gif",
+                "F:\\checkcode.gif",
+                "F:\\checkcode.gif",
+                "F:\\checkcode.gif",
+                "F:\\checkcode.gif",
+                "F:\\checkcode.gif",
+                "F:\\checkcode.gif",
+                "F:\\checkcode.gif",
+                "F:\\checkcode.gif",
+                "F:\\checkcode.gif"
+        );
+
+
+        long start = System.currentTimeMillis();
+        for (String path: imagePathList) {
+            String result = parseLocalImageToString(imagePath, ENG, tessDataPath);
+            //System.out.println(result);
+        }
+        System.out.println("耗时:" + String.valueOf(System.currentTimeMillis()-start));
+
+        long start1 = System.currentTimeMillis();
+        java.util.List<String> results = imagePathList.stream().map(path-> {
+                    try {
+                        String result = parseLocalImageToString(path, ENG, tessDataPath);
+                        return result;
+                    } catch (ParseImageException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }
+        ).collect(Collectors.toList());
+        for (String result: results) {
+            //System.out.println(result);
+        }
+        System.out.println("stream耗时:" + String.valueOf(System.currentTimeMillis()-start1));
+
+        long start2 = System.currentTimeMillis();
+        //Executor executor = Executors.newCachedThreadPool();
+        Executor  executor = Executors.newFixedThreadPool(4);
+        java.util.List<CompletableFuture<String>> codeFutures = imagePathList.stream().map(path->CompletableFuture.supplyAsync(()->{
+            try {
+                String result = parseLocalImageToString(path, ENG, tessDataPath);
+                return result;
+            } catch (ParseImageException e) {
+                throw new RuntimeException(e);
+            }
+        }, executor)).collect(Collectors.toList());
+        CompletableFuture<String> completableFuture = codeFutures.get(0);
+        System.out.println(completableFuture.toString());
+        System.out.println("CompletableFuture耗时:" + String.valueOf(System.currentTimeMillis()-start1));
+        codeFutures.stream().map(CompletableFuture::join).collect(Collectors.toList());
+        System.out.println("CompletableFuture耗时:" + String.valueOf(System.currentTimeMillis()-start1));
     }
 }
